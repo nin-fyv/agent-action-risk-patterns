@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "note": "Generic risk patterns for commands and tool calls made by AI agents. Each is a class of action worth a second look, not proof of harm. Patterns are regular expressions matched case-insensitively.",
+  "classes": [
+    {
+      "id": "credential-access",
+      "title": "Reading credentials or secrets",
+      "why": "Agents rarely need raw secrets; reading them is the first step of most misuse.",
+      "severity": "high",
+      "patterns": ["\\.env\\b", "id_(rsa|ed25519)\\b", "\\.aws/credentials", "\\.ssh/", "\\.npmrc\\b", "\\.netrc\\b", "printenv|\\benv\\b\\s*$", "secret(s)?\\.(json|ya?ml)", "keychain|credential manager"]
+    },
+    {
+      "id": "cloud-metadata",
+      "title": "Querying a cloud metadata endpoint",
+      "why": "Metadata services can hand out short-lived cloud credentials to whatever asks from inside the machine.",
+      "severity": "high",
+      "patterns": ["169\\.254\\.169\\.254", "metadata\\.google\\.internal", "fd00:ec2::254"]
+    },
+    {
+      "id": "outbound-transfer",
+      "title": "Sending data off the machine",
+      "why": "Uploads, posts and pastes are how data leaves; legitimate uses exist but deserve a person's yes.",
+      "severity": "medium",
+      "patterns": ["curl\\b.*\\s-(d|F|T|-data|-upload-file)\\b", "curl\\b.*-X\\s*(POST|PUT)", "wget\\b.*--post-(data|file)", "\\bscp\\b|\\brsync\\b.*:", "pastebin|transfer\\.sh|0x0\\.st|file\\.io", "\\bnc\\b.*\\s\\d+$"]
+    },
+    {
+      "id": "privilege-escalation",
+      "title": "Gaining more privilege than the task needs",
+      "why": "Running as an administrator or widening permissions turns a small mistake into a large one.",
+      "severity": "high",
+      "patterns": ["\\bsudo\\b", "\\bsu\\s+-", "chmod\\s+(-R\\s+)?777", "chown\\s+-R\\s+root", "Set-ExecutionPolicy\\s+Unrestricted", "runas\\s+/user:administrator"]
+    },
+    {
+      "id": "destructive-change",
+      "title": "Deleting or overwriting at scale",
+      "why": "Hard to undo; often the result of a wrong path or an over-broad pattern.",
+      "severity": "high",
+      "patterns": ["rm\\s+-[a-z]*r[a-z]*f?\\s+(/|~|\\*)", "Remove-Item\\b.*-Recurse.*-Force", "git\\s+push\\b.*--force", "git\\s+reset\\s+--hard", "\\bDROP\\s+(TABLE|DATABASE)\\b", "\\bTRUNCATE\\s+TABLE\\b", "mkfs\\.|format\\s+[a-z]:"]
+    },
+    {
+      "id": "oversight-tampering",
+      "title": "Turning off logging, monitoring or safety checks",
+      "why": "An agent that disables the thing watching it removes the evidence of everything after.",
+      "severity": "high",
+      "patterns": ["auditctl\\s+-D", "systemctl\\s+(stop|disable)\\s+(auditd|rsyslog|journald)", "history\\s+-c", "unset\\s+HISTFILE", "Clear-EventLog|wevtutil\\s+cl", "--no-verify\\b", "Set-MpPreference\\s+-Disable"]
+    },
+    {
+      "id": "persistence",
+      "title": "Setting up something that keeps running",
+      "why": "Scheduled tasks and start-up entries outlive the session that created them.",
+      "severity": "medium",
+      "patterns": ["crontab\\s+-", "schtasks\\s+/create", "Register-ScheduledTask", "systemctl\\s+enable", "\\\\CurrentVersion\\\\Run\\b", "launchctl\\s+load"]
+    },
+    {
+      "id": "unapproved-communication",
+      "title": "Messaging people or publishing",
+      "why": "Anything that reaches a person or the public should have a human's approval first.",
+      "severity": "medium",
+      "patterns": ["\\bsendmail\\b|\\bmailx?\\b\\s", "gh\\s+(pr|issue)\\s+(create|comment)", "\\bnpm\\s+publish\\b", "twine\\s+upload", "slack|webhook\\.site|hooks\\.slack\\.com"]
+    }
+  ]
+}
